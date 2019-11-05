@@ -6,12 +6,13 @@ import torch
 import torchvision.transforms as transforms
 
 # 默认输入网络的图片大小
-IMAGE_H = 200
-IMAGE_W = 200
+IMAGE_SIZE = 200
 
 # 定义一个转换关系，用于将图像数据转换成PyTorch的Tensor形式
-data_transform = transforms.Compose([
-    transforms.ToTensor()   # 转换成Tensor形式，并且数值归一化到[0.0, 1.0]
+dataTransform = transforms.Compose([
+    transforms.Resize(IMAGE_SIZE),                          # 将图像按比例缩放至合适尺寸
+    transforms.CenterCrop((IMAGE_SIZE, IMAGE_SIZE)),        # 从图像中心裁剪合适大小的图像
+    transforms.ToTensor()   # 转换成Tensor形式，并且数值归一化到[0.0, 1.0]，同时将H×W×C的数据转置成C×H×W，这一点很关键
 ])
 
 
@@ -21,7 +22,7 @@ class DogsVSCatsDataset(data.Dataset):      # 新建一个数据集类，并且�
         self.list_img = []                  # 新建一个image list，用于存放图片路径，注意是图片路径
         self.list_label = []                # 新建一个label list，用于存放图片对应猫或狗的标签，其中数值0表示猫，1表示狗
         self.data_size = 0                  # 记录数据集大小
-        self.transform = data_transform     # 转换关系
+        self.transform = dataTransform      # 转换关系
 
         if self.mode == 'train':            # 训练集模式下，需要提取图片的路径和标签
             dir = dir + '/train/'           # 训练集路径在"dir"/train/
@@ -41,19 +42,15 @@ class DogsVSCatsDataset(data.Dataset):      # 新建一个数据集类，并且�
                 self.data_size += 1
                 self.list_label.append(2)       # 添加2作为label，实际未用到，也无意义
         else:
-            return print('Undefined Dataset!')
+            print('Undefined Dataset!')
 
     def __getitem__(self, item):            # 重载data.Dataset父类方法，获取数据集中数据内容
         if self.mode == 'train':                                        # 训练集模式下需要读取数据集的image和label
             img = Image.open(self.list_img[item])                       # 打开图片
-            img = img.resize((IMAGE_H, IMAGE_W))                        # 将图片resize成统一大小
-            img = np.array(img)[:, :, :3]                               # 数据转换成numpy数组形式
             label = self.list_label[item]                               # 获取image对应的label
             return self.transform(img), torch.LongTensor([label])       # 将image和label转换成PyTorch形式并返回
         elif self.mode == 'test':                                       # 测试集只需读取image
             img = Image.open(self.list_img[item])
-            img = img.resize((IMAGE_H, IMAGE_W))
-            img = np.array(img)[:, :, :3]
             return self.transform(img)                                  # 只返回image
         else:
             print('None')

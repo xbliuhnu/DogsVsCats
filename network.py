@@ -26,8 +26,7 @@ class Net(nn.Module):                                       # 新建一个网络
         x = x.view(x.size()[0], -1)         # 由于全连层输入的是一维张量，因此需要对输入的[50×50×16]格式数据排列成[40000×1]形式
         x = F.relu(self.fc1(x))             # 第一次全连，ReLU激活
         x = F.relu(self.fc2(x))             # 第二次全连，ReLU激活
-        x = self.fc3(x)                     # 第三次激活
+        y = self.fc3(x)                     # 第三次激活，ReLU激活
 
-        return F.softmax(x, dim=1)          # 采用SoftMax方法将输出的2个输出值调整至[0.0, 1.0],两者和为1，并返回
-
+        return y
 
